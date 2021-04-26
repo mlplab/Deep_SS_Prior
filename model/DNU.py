@@ -50,7 +50,9 @@ class DNU_Block(torch.nn.Module):
         yt1 = yt.sum(dim=1, keepdims=True)
         yt2 = yt1.tile(1, Ct, 1, 1)
         xt2 = yt2 * Cu
-        x_output = (1 - self.DNU_Params['deta'] * self.DNU_Params['eta']) * xt - self.DNU_Params['deta'] * xt2 + self.DNU_Params['deta'] * x0 + self.DNU_Params['deta'] * self.DNU_Params['eta'] * z
+        x_output = (1 - self.DNU_Params['deta'] * self.DNU_Params['eta']) * xt - \
+                    self.DNU_Params['deta'] * xt2 + self.DNU_Params['deta'] * x0 + \
+                    self.DNU_Params['deta'] * self.DNU_Params['eta'] * z
 
         return x_output
 
@@ -66,7 +68,9 @@ class DNU(torch.nn.Module):
         deta = kwargs.get('deta', .04)
         eta = kwargs.get('eta', .8)
         wz1 = kwargs.get('wz1', .8)
-        self.recon_block = torch.nn.ModuleList([DNU_Block(output_ch, output_ch, feature_num=feature_num) for _ in range(layer_num)])
+        self.recon_block = torch.nn.ModuleList([DNU_Block(output_ch, output_ch,
+                                                          feature_num=feature_num)
+                                                for _ in range(layer_num)])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 
