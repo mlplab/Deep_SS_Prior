@@ -9,6 +9,7 @@ class DNU_Block(torch.nn.Module):
     def __init__(self, input_ch: int, output_ch: int, *args, feature_num: int=64, **kwargs):
         super(DNU_Block, self).__init__()
 
+<<<<<<< HEAD
         deta = kwargs.get('deta', .04)
         eta = kwargs.get('eta', .8)
         wz1 = kwargs.get('wz1', .8)
@@ -53,10 +54,14 @@ class DNU_Block(torch.nn.Module):
         x_output = (1 - self.DNU_Params['deta'] * self.DNU_Params['eta']) * xt - self.DNU_Params['deta'] * xt2 + self.DNU_Params['deta'] * x0 + self.DNU_Params['deta'] * self.DNU_Params['eta'] * z
 
         return x_output
+=======
+        pass
+>>>>>>> 34f065d... create DNU model
 
 
 class DNU(torch.nn.Module):
 
+<<<<<<< HEAD
     def __init__(self, input_ch: int, output_ch: int, *args, feature_num: int=64,
                  layer_num=9, **kwargs):
         super(DNU, self).__init__()
@@ -78,3 +83,9 @@ class DNU(torch.nn.Module):
             xt = layer(xt, x0, Cu)
 
         return xt
+=======
+    def __init__(self, input_ch: int, output_ch: int, *args, feature_num: int=64, **kwargs):
+        super(DNU, self).__init__()
+
+        pass
+>>>>>>> 34f065d... create DNU model
