@@ -51,8 +51,8 @@ class DNU_Block(torch.nn.Module):
         yt2 = yt1.tile(1, Ct, 1, 1)
         xt2 = yt2 * Cu
         x_output = (1 - self.DNU_Params['deta'] * self.DNU_Params['eta']) * xt - \
-            self.DNU_Params['deta'] * xt2 + self.DNU_Params['deta'] * x0 + \
-                self.DNU_Params['deta'] * self.DNU_Params['eta'] * z
+                    self.DNU_Params['deta'] * xt2 + self.DNU_Params['deta'] * x0 + \
+                    self.DNU_Params['deta'] * self.DNU_Params['eta'] * z
 
         return x_output
 
