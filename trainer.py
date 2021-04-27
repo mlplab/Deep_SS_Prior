@@ -23,7 +23,7 @@ torch.set_printoptions(precision=8)
 
 class Trainer(object):
 
-    def __init__(self, model, criterion, optimizer, scheduler=None, callbacks=None, **kwargs):
+    def __init__(self, model, criterion, optimizer, scheduler=None, callbacks=None, **kwargs, model_name: str=normal):
 
         self.model = model
         self.criterion = criterion
@@ -171,3 +171,13 @@ class Deeper_Trainer(Trainer):
             self.optimizer.step()
         show_loss = torch.nn.functional.mse_loss(output, labels)
         return show_loss
+
+
+class DNU_Trainer(Trainer):
+
+    def _trans_data(self, inputs, labels):
+        x, Cu = inputs
+        x = x.to(device)
+        Cu = x.to(device)
+        labels = x.to(device)
+        return [x, Cu], labels
