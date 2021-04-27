@@ -23,7 +23,7 @@ torch.set_printoptions(precision=8)
 
 class Trainer(object):
 
-    def __init__(self, model, criterion, optimizer, scheduler=None, callbacks=None, **kwargs, model_name: str=normal):
+    def __init__(self, model, criterion, optimizer, scheduler=None, callbacks=None, **kwargs):
 
         self.model = model
         self.criterion = criterion
