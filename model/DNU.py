@@ -9,13 +9,13 @@ class DNU_Block(torch.nn.Module):
     def __init__(self, input_ch: int, output_ch: int, *args, feature_num: int=64, **kwargs):
         super(DNU_Block, self).__init__()
 
-        deta = kwargs.get('deta', .04)
-        eta = kwargs.get('eta', .8)
-        wz1 = kwargs.get('wz1', .8)
+        self.deta = kwargs.get('deta', .04)
+        self.eta = kwargs.get('eta', .8)
+        self.wz1 = kwargs.get('wz1', .8)
         # DNU Parameters
-        self.DNU_Params = torch.nn.ParameterDict({'deta': torch.nn.Parameter(torch.tensor([deta])),
-                                                  'eta': torch.nn.Parameter(torch.tensor([eta])),
-                                                  'wz1': torch.nn.Parameter(torch.tensor([wz1]))})
+        # self.DNU_Params = torch.nn.ParameterDict({'deta': torch.nn.Parameter(torch.tensor([deta])),
+        #                                           'eta': torch.nn.Parameter(torch.tensor([eta])),
+        #                                           'wz1': torch.nn.Parameter(torch.tensor([wz1]))})
 
         # local module
         self.resx1 = torch.nn.Sequential(torch.nn.ReLU(),
@@ -44,15 +44,14 @@ class DNU_Block(torch.nn.Module):
         x_mul2_softmax = x_mul2 * (1 / (Ht + Ct - 1) * Wt)
         z2_tmp = x_mul2_softmax.view(-1, Ct, Ht, Wt)
         z2 = torch.nn.functional.relu(z2_tmp)
-        z = self.DNU_Params['wz1'] * z1 + (1 - self.DNU_Params['wz1']) * z2
+        z = self.wz1 * z1 + (1 - self.wz1) * z2
 
         yt = xt * Cu
         yt1 = yt.sum(dim=1, keepdims=True)
         yt2 = yt1.tile(1, Ct, 1, 1)
         xt2 = yt2 * Cu
-        x_output = (1 - self.DNU_Params['deta'] * self.DNU_Params['eta']) * xt - \
-                    self.DNU_Params['deta'] * xt2 + self.DNU_Params['deta'] * x0 + \
-                    self.DNU_Params['deta'] * self.DNU_Params['eta'] * z
+        x_output = (1 - self.deta * self.eta) * xt - self.deta * xt2 + self.deta * x0 + \
+                   self.deta * self.eta * z
 
         return x_output
 
