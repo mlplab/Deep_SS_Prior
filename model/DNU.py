@@ -9,9 +9,9 @@ class DNU_Block(torch.nn.Module):
     def __init__(self, input_ch: int, output_ch: int, *args, feature_num: int=64, **kwargs):
         super(DNU_Block, self).__init__()
 
-        self.deta = torch.nn.Parameter(kwargs.get('deta', .04))
-        self.eta = torch.nn.Parameter(kwargs.get('eta', .8))
-        self.wz1 = torch.nn.Parameter(kwargs.get('wz1', .8))
+        self.deta = torch.nn.Parameter(torch.tensor(kwargs.get('deta', .04)))
+        self.eta = torch.nn.Parameter(torch.tensor(kwargs.get('eta', .8)))
+        self.wz1 = torch.nn.Parameter(torch.tensor(kwargs.get('wz1', .8)))
         # DNU Parameters
         # self.DNU_Params = torch.nn.ParameterDict({'deta': torch.nn.Parameter(torch.tensor([deta])),
         #                                           'eta': torch.nn.Parameter(torch.tensor([eta])),
