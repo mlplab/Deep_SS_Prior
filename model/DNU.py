@@ -46,7 +46,7 @@ class DNU_Block(torch.nn.Module):
         z2 = torch.nn.functional.relu(z2_tmp)
         z = self.DNU_Params['wz1'] * z1 + (1 - self.DNU_Params['wz1']) * z2
 
-        yt = x * Cu
+        yt = xt * Cu
         yt1 = yt.sum(dim=1, keepdims=True)
         yt2 = yt1.tile(1, Ct, 1, 1)
         xt2 = yt2 * Cu
