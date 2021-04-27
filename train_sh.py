@@ -8,11 +8,12 @@ import datetime
 import torch
 import torchvision
 from torchsummary import summary
-from trainer import Trainer
+from trainer import Trainer, DNU_Trainer
 from model.HSCNN import HSCNN
 from model.DeepSSPrior import DeepSSPrior
 from model.HyperReconNet import HyperReconNet
-from data_loader import PatchMaskDataset
+from model.DNU import DNU
+from data_loader import PatchMaskDataset, DNUDataset
 from utils import RandomCrop, RandomHorizontalFlip, RandomRotation
 from utils import ModelCheckPoint, Draw_Output
 from utils import plot_progress
@@ -65,16 +66,10 @@ ckpt_path = os.path.join('../SCI_ckpt', f'{data_name}_{dt_now.month:02d}{dt_now.
 # os.makedirs(trained_ckpt_path, exist_ok=True)
 
 
-model_obj = {'HSCNN': HSCNN, 'HyperReconNet': HyperReconNet, 'DeepSSPrior': DeepSSPrior}
-activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu'}
+model_obj = {'HSCNN': HSCNN, 'HyperReconNet': HyperReconNet, 'DeepSSPrior': DeepSSPrior, 'DNU': DNU}
+activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu', 'DNU': 'relu'}
 
 
-train_transform = (RandomHorizontalFlip(), torchvision.transforms.ToTensor())
-test_transform = None
-train_dataset = PatchMaskDataset(train_path, mask_path, transform=train_transform, concat=concat_flag)
-train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-test_dataset = PatchMaskDataset(test_path, mask_path, transform=test_transform, concat=concat_flag)
-test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 
 if model_name not in model_obj.keys():
@@ -105,9 +100,25 @@ print(model_name)
 
 ckpt_cb = ModelCheckPoint(ckpt_path, save_model_name,
                           mkdir=True, partience=1, varbose=True)
-trainer = Trainer(model, criterion, optim, scheduler=scheduler,
-                  callbacks=[ckpt_cb],
-                  output_progress_path=os.path.join(ckpt_path, save_model_name))
+train_transform = (RandomHorizontalFlip(), torchvision.transforms.ToTensor())
+test_transform = None
+
+if model_name == 'DNU':
+    train_dataset = DNUDataset(train_path, mask_path, transform=train_transform, concat=concat_flag)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    test_dataset = DNUDataset(test_path, mask_path, transform=test_transform, concat=concat_flag)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    trainer = DNU_Trainer(model, criterion, optim, scheduler=scheduler,
+                      callbacks=[ckpt_cb],
+                      output_progress_path=os.path.join(ckpt_path, save_model_name))
+else:
+    train_dataset = PatchMaskDataset(train_path, mask_path, transform=train_transform, concat=concat_flag)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    test_dataset = PatchMaskDataset(test_path, mask_path, transform=test_transform, concat=concat_flag)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    trainer = Trainer(model, criterion, optim, scheduler=scheduler,
+                      callbacks=[ckpt_cb],
+                      output_progress_path=os.path.join(ckpt_path, save_model_name))
 train_loss, val_loss = trainer.train(epochs, train_dataloader, test_dataloader)
 torch.save({'model_state_dict': model.state_dict(),
             'optim': optim.state_dict(),
