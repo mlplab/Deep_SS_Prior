@@ -138,7 +138,7 @@ class DNUDataset(PatchMaskDataset):
         mask = sio.loadmat(os.path.join(self.mask_path, f'mask_{patch_id}.mat'))[self.data_key]
         mask = self.mask_transforms(mask)
         measurement_data = (trans_data * mask).sum(dim=0, keepdim=True)
-        measurement_data = measurement_data.tile(1, label_data.shape[1], 1, 1)
+        measurement_data = measurement_data.tile(1, mask.shape[0], 1, 1)
         measurement_data = measurement_data * mask
         if self.concat is True:
             measurement_data = torch.cat([measurement_data, mask], dim=0)
