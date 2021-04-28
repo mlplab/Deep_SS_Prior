@@ -18,3 +18,4 @@
 *.cpython*
 *.pkl
 __pycache__/
+*.txt
