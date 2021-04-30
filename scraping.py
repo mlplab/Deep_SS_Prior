@@ -1,14 +1,18 @@
 # coding: UTF-8
 
 
+import os
 import re
 import requests
 from bs4 import BeautifulSoup
 
 
+http_proxy = os.environ.get('HTTP_PROXY')
+https_proxy = os.environ.get('HTTPs_PROXY')
+
 proxies = {
-        "http": "http://proxy.cc.yamaguchi-u.ac.jp:8080",
-        "https": "http://proxy.cc.yamaguchi-u.ac.jp:8080",
+        "http": http_proxy,
+        "https": https_proxy
 }
 
 
