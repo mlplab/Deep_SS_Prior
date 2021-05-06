@@ -14,6 +14,8 @@ from utils import normalize
 data_dir = '../SCI_dataset/ICVL_2021/'
 data_list = os.listdir(data_dir)
 move_dir = '../SCI_dataset/ICVL_2021_comp'
+if os.path.exists(move_dir):
+    shutil.rmtree(move_dir)
 os.makedirs(move_dir, exist_ok=True)
 
 # data = h5py.File(os.path.join(data_dir, data_list[0]))
