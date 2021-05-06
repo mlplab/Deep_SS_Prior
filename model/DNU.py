@@ -59,7 +59,7 @@ class DNU_Block(torch.nn.Module):
 class DNU(torch.nn.Module):
 
     def __init__(self, input_ch: int, output_ch: int, *args, feature_num: int=64,
-                 layer_num=9, **kwargs):
+                 block_num=9, **kwargs):
         super(DNU, self).__init__()
 
         self.output_ch = output_ch
@@ -70,7 +70,7 @@ class DNU(torch.nn.Module):
         self.recon_block = torch.nn.ModuleList([DNU_Block(output_ch, output_ch,
                                                           feature_num=feature_num,
                                                           deta=deta, eta=eta, wz1=wz1)
-                                                for _ in range(layer_num)])
+                                                for _ in range(block_num)])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 

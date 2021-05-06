@@ -79,6 +79,7 @@ if model_name not in model_obj.keys():
 
 activation = activations[model_name]
 
+print(block_num)
 
 model = model_obj[model_name](input_ch, 31, block_num=block_num,
                               activation=activation, ratio=ratio, mode=mode)

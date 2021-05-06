@@ -8,11 +8,12 @@ batch_size=64
 epoch=150
 datasets="CAVE"
 concat="False"
-model_name=("HSCNN DeepSSPrior HyperReconNet DNU")
-block_num=9
+# model_name=("HSCNN DeepSSPrior HyperReconNet DNU")
+model_name="DNU"
+block_num=5
 
 
-while getopts b:e:d:c:m:bn: OPT
+while getopts b:e:d:c:m:l: OPT
 do
     echo "$OPTARG"
     case $OPT in
@@ -21,7 +22,7 @@ do
         d) dataset=$OPTARG ;;
         c) concat=$OPTARG ;;
         m) model_name=$OPTARG ;;
-        bn) block_num=$OPTARG ;;
+        l) block_num=$OPTARG ;;
         *) echo "Usage: $CMDNAME [-b batch size] [-e epoch]" 1>&2
             exit 1;;
     esac
