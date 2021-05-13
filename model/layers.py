@@ -651,3 +651,38 @@ class Mix_SS_Layer(torch.nn.Module):
         h = self.se_block(h)
         h = self.spectral_conv(h)
         return h + self.shortcut(x)
+
+
+# ########################## Feature Fusion Layer ##########################
+
+
+class FeatureFusion(torch.nn.Module):
+
+    def __init__(self, input_ch: int, output_ch: int, *args, feature_num: int=64,
+                 **kwargs):
+        super().__init__()
+
+        activations = {'relu': ReLU, 'leaky': Leaky, 'swish': Swish, 'mish': Mish}
+        activation = str(kwargs.get('activation', 'relu')).lower()
+        feature_block = kwargs.get('feature_block', 3)
+
+        feature_kernels = [2 * i + 1 for i in range(feature_block)]
+        self.features_conv = torch.nn.ModuleList([torch.nn.Conv2d(input_ch, output_ch, kernel, 1, kernel // 2, groups=input_ch)
+                                                  for kernel in feature_kernels])
+        self.mix_feature_conv = torch.nn.Conv2d(feature_block + 1, 1, 1, 1, 0)
+        self.output_conv = torch.nn.Conv2d(output_ch, output_ch, 3, 1, 1)
+
+    def forward(self, x):
+
+        b, ch, h, w = x.size()
+        x_in = x
+        all_x = [x_in]
+        for layer in self.features_conv:
+            x = layer(x_in)
+            all_x.append(x)
+        all_x = torch.cat(all_x, dim=1)
+        all_x = all_x.reshape(b, -1, h * w, ch)
+        all_x = self.mix_feature_conv(all_x)
+        all_x = all_x.reshape(b, ch, h, w)
+        return_x = self.output_conv(all_x)
+        return return_x
