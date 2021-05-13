@@ -85,6 +85,7 @@ if model_name not in model_obj.keys():
 
 
 
+activation=activations[activation]
 model = model_obj[model_name](input_ch, 31, block_num=block_num,
                               activation=activation, feature_block=feature_block)
 
