@@ -1,8 +1,8 @@
 # coding: UTF-8
 
 
-from layers import ReLU, Leaky, Swish, Mish
-from layers import FeatureFusion
+from .layers import ReLU, Leaky, Swish, Mish
+from .layers import FeatureFusion
 import torch
 from torchsummary import summary
 
