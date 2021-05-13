@@ -85,7 +85,7 @@ if model_name not in model_obj.keys():
 
 
 
-activation=activations[activation]
+activation=activations[model_name]
 model = model_obj[model_name](input_ch, 31, block_num=block_num,
                               activation=activation, feature_block=feature_block)
 
@@ -95,7 +95,7 @@ if model_name == 'FusionReconst':
 else:
     save_model_name = f'{model_name}_{activation}_{block_num:02d}'
 finish_ckpt = os.path.join(all_ckpt_path, f'{save_model_name}_{dt_now}.tar')
-if os.path.exists(os.path.join(all_ckpt_path, finish_ckpt)):
+if os.path.exists(os.path.join(finish_ckpt)):
     print('already trained')
     sys.exit(0)
 
