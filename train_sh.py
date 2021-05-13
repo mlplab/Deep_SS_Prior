@@ -83,7 +83,6 @@ if model_name not in model_obj.keys():
     sys.exit(0)
 
 
-activation = activations[model_name]
 
 
 model = model_obj[model_name](input_ch, 31, block_num=block_num,
