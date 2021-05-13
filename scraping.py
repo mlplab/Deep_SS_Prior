@@ -26,10 +26,11 @@ os.makedirs(save_dir, exist_ok=True)
 
 
 if __name__ == '__main__':
-    # response = requests.get(url, proxies=proxies)
-    # with open('icvl_list.html', 'w') as f:
-    #     print(response.text, file=f)
-    # response.encoding = response.apparent_encoding
+    if os.path.exists('icvl_list.html') is False:
+        response = requests.get(url, proxies=proxies)
+        with open('icvl_list.html', 'w') as f:
+            print(response.text, file=f)
+        response.encoding = response.apparent_encoding
     with open('icvl_list.html', 'r') as f:
         html_text = f.read()
     soup = BeautifulSoup(html_text, 'html.parser')

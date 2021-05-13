@@ -21,9 +21,11 @@ for i, name in enumerate(data_list):
     new_data = {}
     with h5py.File(os.path.join(data_dir, name), 'r') as data:
         print(f'{i:05d}, {name:40s}, {data["data"].shape}')
+        '''
         img = np.array(data['data'])
         img = normalize(img)
         plt.imshow(img[:, :, (26, 16, 9)])
         plt.grid()
         plt.tight_layout()
         plt.savefig(os.path.join(img_save_dir, name[:-4] + '.png'), bbox_inches='tight')
+        '''

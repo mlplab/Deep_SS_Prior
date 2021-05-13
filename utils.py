@@ -70,11 +70,17 @@ def make_patch_h5py(data_path: str, save_path: str, size: int=256, step: int=256
         idx = name.split('.')[0]
         # f = scipy.io.loadmat(os.path.join(data_path, name))
         print(os.path.join(data_path, name))
-        data = h5py.File(os.path.join(data_path, name), 'r')
-        data = np.array(data[data_key].value)
+        # data = h5py.File(os.path.join(data_path, name), 'r')
+        with h5py.File(os.path.join(data_path, name), 'r') as r_data:
+            # data = np.array(data[data_key])
+            data = np.array(r_data[data_key])
+        if data.shape[0] < size or data.shape[1] < size:
+            continue
         data = normalize(data)
         data = np.expand_dims(np.array(data, np.float32).transpose([2, 0, 1]), axis=0)[::-1, :, :]
-        tensor_data = torch.as_tensor(data)
+        print(data.shape)
+        # tensor_data = torch.from_numpy(data)
+        tensor_data = torch.Tensor(data)
         patch_data = tensor_data.unfold(2, size, step).unfold(3, size, step)
         patch_data = patch_data.permute((0, 2, 3, 1, 4, 5)).reshape(-1, ch, size, size)
         for i in range(patch_data.size()[0]):
