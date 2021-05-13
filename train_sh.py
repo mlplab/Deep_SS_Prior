@@ -12,6 +12,7 @@ from trainer import Trainer
 from model.HSCNN import HSCNN
 from model.DeepSSPrior import DeepSSPrior
 from model.HyperReconNet import HyperReconNet
+from model.PixelwiseFusionReconst import FusionReconstHSI
 from data_loader import PatchMaskDataset
 from utils import RandomCrop, RandomHorizontalFlip, RandomRotation
 from utils import ModelCheckPoint, Draw_Output
@@ -25,9 +26,8 @@ parser.add_argument('--dataset', '-d', default='Harvard', type=str, help='Select
 parser.add_argument('--concat', '-c', default='False', type=str, help='Concat mask by input')
 parser.add_argument('--model_name', '-m', default='HSCNN', type=str, help='Model Name')
 parser.add_argument('--block_num', '-bn', default=9, type=int, help='Model Block Number')
-parser.add_argument('--ratio', '-r', default=2, type=int, help='Ghost ratio')
-parser.add_argument('--mode', '-md', default='None', type=str, help='Mix mode')
-parser.add_argument('-- start_time', '-st', default='0000', type=str, help='start learning time')
+parser.add_argument('--feature_block', '-fb', default=2, type=int, help='fusion feature num')
+parser.add_argument('--start_time', '-st', default='0000', type=str, help='start learning time')
 args = parser.parse_args()
 
 
@@ -42,9 +42,8 @@ else:
 data_name = args.dataset
 model_name = args.model_name
 block_num = args.block_num
-ratio = args.ratio
-mode = args.mode
-ddt_now = args.start_time
+feature_block = args.feature_block
+dt_now = args.start_time
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -67,8 +66,8 @@ all_ckpt_path = os.path.join(ckpt_path, 'all_trained')
 os.makedirs(all_ckpt_path, exist_ok=True)
 
 
-model_obj = {'HSCNN': HSCNN, 'HyperReconNet': HyperReconNet, 'DeepSSPrior': DeepSSPrior}
-activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu'}
+model_obj = {'HSCNN': HSCNN, 'HyperReconNet': HyperReconNet, 'DeepSSPrior': DeepSSPrior, 'FusionReconst': FusionReconstHSI}
+activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu', 'FusionReconst': 'none'}
 
 
 train_transform = (RandomHorizontalFlip(), torchvision.transforms.ToTensor())
@@ -88,10 +87,17 @@ activation = activations[model_name]
 
 
 model = model_obj[model_name](input_ch, 31, block_num=block_num,
-                              activation=activation, ratio=ratio, mode=mode)
+                              activation=activation, feature_block=feature_block)
 
 
-save_model_name = f'{model_name}_{activation}_{block_num:02d}'
+if model_name == 'FusionReconst':
+    save_model_name = f'{model_name}_{activation}_{block_num:02d}_{feature_block:02d}'
+else:
+    save_model_name = f'{model_name}_{activation}_{block_num:02d}'
+finish_ckpt = os.path.join(all_ckpt_path, f'{save_model_name}_{dt_now}.tar')
+if os.path.exists(os.path.join(all_ckpt_path, finish_ckpt)):
+    print('already trained')
+    sys.exit(0)
 
 
 model.to(device)
@@ -115,6 +121,6 @@ torch.save({'model_state_dict': model.state_dict(),
             'optim': optim.state_dict(),
             'train_loss': train_loss, 'val_loss': val_loss,
             'epoch': epochs},
-            os.path.join(all_ckpt_path, f'{save_model_name}_{dt_now}.tar'))
+           finish_ckpt)
 plot_progress(ckpt_path, mode='train')
 plot_progress(ckpt_path, mode='val')
