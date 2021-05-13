@@ -662,27 +662,35 @@ class FeatureFusion(torch.nn.Module):
                  **kwargs):
         super().__init__()
 
-        activations = {'relu': ReLU, 'leaky': Leaky, 'swish': Swish, 'mish': Mish}
+        activations = {'none': torch.nn.Identity, 'relu': ReLU, 'leaky': Leaky, 'swish': Swish, 'mish': Mish}
         activation = str(kwargs.get('activation', 'relu')).lower()
         feature_block = kwargs.get('feature_block', 3)
 
         feature_kernels = [2 * i + 1 for i in range(feature_block)]
-        self.features_conv = torch.nn.ModuleList([torch.nn.Conv2d(input_ch, output_ch, kernel, 1, kernel // 2, groups=input_ch)
+        self.features_conv = torch.nn.ModuleList([torch.nn.Conv2d(input_ch, 
+                                                                  output_ch, 
+                                                                  kernel, 
+                                                                  1, 
+                                                                  kernel // 2, 
+                                                                  groups=input_ch)
                                                   for kernel in feature_kernels])
-        self.mix_feature_conv = torch.nn.Conv2d(feature_block + 1, 1, 1, 1, 0)
+        self.feature_activation = torch.nn.ModuleList([activations[activation]() 
+                                                       for _ in range(len(feature_kernels))])
+        self.pixel_fusion = torch.nn.Conv2d(feature_block + 1, 1, 1, 1, 0)
         self.output_conv = torch.nn.Conv2d(output_ch, output_ch, 3, 1, 1)
+        self.output_activation = activations[activation]()
 
     def forward(self, x):
 
         b, ch, h, w = x.size()
         x_in = x
         all_x = [x_in]
-        for layer in self.features_conv:
-            x = layer(x_in)
+        for i, (activation, layer) in enumerate(zip(self.feature_activation, self.features_conv)):
+            x = activation(layer(x_in))
             all_x.append(x)
         all_x = torch.cat(all_x, dim=1)
         all_x = all_x.reshape(b, -1, h * w, ch)
-        all_x = self.mix_feature_conv(all_x)
+        all_x = self.pixel_fusion(all_x)
         all_x = all_x.reshape(b, ch, h, w)
-        return_x = self.output_conv(all_x)
+        return_x = self.output_activation(self.output_conv(all_x))
         return return_x
