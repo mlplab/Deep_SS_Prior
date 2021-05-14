@@ -689,7 +689,7 @@ class FeatureFusion(torch.nn.Module):
             x = activation(layer(x_in))
             all_x.append(x)
         all_x = torch.cat(all_x, dim=1)
-        all_x = all_x.reshape(b, -1, h * w, ch)
+        all_x = all_x.reshape(b, -1, ch, h * w)
         all_x = self.pixel_fusion(all_x)
         all_x = all_x.reshape(b, ch, h, w)
         return_x = self.output_activation(self.output_conv(all_x))

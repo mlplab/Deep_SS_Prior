@@ -11,7 +11,7 @@ from data_loader import PatchEvalDataset
 from model.HSCNN import HSCNN
 from model.DeepSSPrior import DeepSSPrior
 from model.HyperReconNet import HyperReconNet
-from model.Ghost_Mix import GhostMix
+from model.PixelwiseFusionReconst import FusionReconstHSI
 from evaluate import RMSEMetrics, PSNRMetrics, SAMMetrics
 from evaluate import ReconstEvaluater
 from pytorch_ssim import SSIM
@@ -22,8 +22,8 @@ parser.add_argument('--dataset', '-d', default='Harvard', type=str, help='Select
 parser.add_argument('--concat', '-c', default='False', type=str, help='Concat mask by input')
 parser.add_argument('--model_name', '-m', default='HSCNN', type=str, help='Model Name')
 parser.add_argument('--block_num', '-b', default=9, type=int, help='Model Block Number')
-parser.add_argument('--ratio', '-r', default=2, type=int, help='Ghost ratio')
-parser.add_argument('--mode', '-md', default='None', type=str, help='Mix mode')
+parser.add_argument('--learned_time', '-lt', default='0000', type=str, help='learned model day')
+parser.add_argument('--feature_block', '-fb', default=2, type=int, help='feature block')
 args = parser.parse_args()
 
 
@@ -37,17 +37,15 @@ else:
     input_ch = 32
 
 
-dt_now = datetime.datetime.now()
-
-
-model_obj = {'HSCNN': HSCNN, 'HyperReconNet': HyperReconNet, 'DeepSSPrior': DeepSSPrior, 'Ghost': GhostMix}
-activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu', 'Ghost': 'relu'}
+model_obj = {'HSCNN': HSCNN, 'HyperReconNet': HyperReconNet, 'DeepSSPrior': DeepSSPrior, 'FusionReconst': FusionReconstHSI}
+activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu', 'FusionReconst': 'none'}
 
 
 model_name = args.model_name
 block_num = args.block_num
-ratio = args.ratio
-mode = args.mode
+feature_block = args.feature_block
+dt_now = args.learned_time
+print(dt_now, feature_block)
 
 
 img_path = f'../SCI_dataset/My_{data_name}'
@@ -56,15 +54,15 @@ mask_path = os.path.join(img_path, 'eval_mask_data')
 
 
 activation = activations[model_name]
-ckpt_dir = f'../SCI_ckpt/{data_name}_0511/all_trained'
-if model_name == 'Ghost':
-    ckpt_name = f'{model_name}_{activation}_{block_num:02d}_{ratio:02}_{mode}_{dt_now.month:02d}{dt_now.day:02d}'
+ckpt_dir = f'../SCI_ckpt/{data_name}_{dt_now}/all_trained'
+if model_name == 'FusionReconst':
+    ckpt_name = f'{model_name}_{activation}_{block_num:02d}_{feature_block:02d}'
 else:
-    ckpt_name = f'{model_name}_{activation}_{block_num:02d}_{dt_now.month:02d}{dt_now.day:02d}'
-ckpt_path = os.path.join(ckpt_dir, ckpt_name + '.tar')
+    ckpt_name = f'{model_name}_{activation}_{block_num:02d}'
+ckpt_path = os.path.join(ckpt_dir, f'{ckpt_name}_{dt_now}.tar')
 
 
-output_path = os.path.join('../SCI_result/', data_name, ckpt_name)
+output_path = os.path.join('../SCI_result/', f'{data_name}_{dt_now}', ckpt_name)
 output_img_path = os.path.join(output_path, 'output_img')
 output_mat_path = os.path.join(output_path, 'output_mat')
 output_csv_path = os.path.join(output_path, 'output.csv')
@@ -83,7 +81,7 @@ if model_name not in model_obj.keys():
     sys.exit(0)
 model = model_obj[model_name](input_ch, 31, block_num=block_num,
                               activation=activations[model_name], 
-                              ratio=ratio, mode=mode)
+                              feature_block=feature_block)
 
 
 ckpt = torch.load(ckpt_path, map_location=torch.device(device))

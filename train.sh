@@ -41,6 +41,7 @@ model_name=( `echo $model_name | tr ' ' ' '` )
 datasets=( `echo $datasets | tr ' ' ' '` )
 for dataset in $datasets[@]; do
     for name in $model_name[@]; do
+        echo $model_name
         if [ $name = "FusionReconst" ]; then
             for feature_block in $feature_blocks[@]; do
                 python train_sh.py -b $batch_size -e $epoch -d $dataset -c $concat -m $name -bn $block_num -st $start_time -fb $feature_block
