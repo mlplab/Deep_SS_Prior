@@ -1,8 +1,8 @@
 # coding: UTF-8
 
 
-from layers import ReLU, Leaky, Swish, Mish
-from layers import FeatureFusion, FeatureFusionCH
+from .layers import ReLU, Leaky, Swish, Mish
+from .layers import FeatureFusion
 import torch
 from torchsummary import summary
 
@@ -16,9 +16,12 @@ class FusionReconstHSI(torch.nn.Module):
         activations = {'relu': ReLU, 'leaky': Leaky, 'swish': Swish, 'mish': Mish}
         activation = str(kwargs.get('activation', 'relu')).lower()
         feature_block = kwargs.get('feature_block', 3)
-        features_mode = {'pixel': FeatureFusion, 'ch': FeatureFusionCH}
         self.input_conv = torch.nn.Conv2d(input_ch, feature_num, 3, 1, 1)
-        self.features_conv = torch.nn.ModuleList([features_mode[mode](feature_num, feature_num, feature_block=feature_block, activation=activation)
+        self.features_conv = torch.nn.ModuleList([FeatureFusion(feature_num,
+                                                                      feature_num,
+                                                                      feature_block=feature_block,
+                                                                      activation=activation,
+                                                                      mode=mode)
                                                   for _ in range(block_num)])
         self.output_conv = torch.nn.Conv2d(feature_num, output_ch, 3, 1, 1)
 
