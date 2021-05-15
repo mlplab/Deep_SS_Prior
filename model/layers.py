@@ -667,14 +667,14 @@ class FeatureFusion(torch.nn.Module):
         feature_block = kwargs.get('feature_block', 3)
 
         feature_kernels = [2 * i + 1 for i in range(feature_block)]
-        self.features_conv = torch.nn.ModuleList([torch.nn.Conv2d(input_ch, 
-                                                                  output_ch, 
-                                                                  kernel, 
-                                                                  1, 
-                                                                  kernel // 2, 
+        self.features_conv = torch.nn.ModuleList([torch.nn.Conv2d(input_ch,
+                                                                  output_ch,
+                                                                  kernel,
+                                                                  1,
+                                                                  kernel // 2,
                                                                   groups=input_ch)
                                                   for kernel in feature_kernels])
-        self.feature_activation = torch.nn.ModuleList([activations[activation]() 
+        self.feature_activation = torch.nn.ModuleList([activations[activation]()
                                                        for _ in range(len(feature_kernels))])
         self.pixel_fusion = torch.nn.Conv2d(feature_block + 1, 1, 1, 1, 0)
         self.output_conv = torch.nn.Conv2d(output_ch, output_ch, 3, 1, 1)
@@ -690,6 +690,47 @@ class FeatureFusion(torch.nn.Module):
             all_x.append(x)
         all_x = torch.cat(all_x, dim=1)
         all_x = all_x.reshape(b, -1, ch, h * w)
+        all_x = self.pixel_fusion(all_x)
+        all_x = all_x.reshape(b, ch, h, w)
+        return_x = self.output_activation(self.output_conv(all_x))
+        return return_x
+
+
+class FeatureFusionCH(torch.nn.Module):
+
+    def __init__(self, input_ch: int, output_ch: int, *args, feature_num: int=64,
+                 **kwargs):
+        super().__init__()
+
+        activations = {'none': torch.nn.Identity, 'relu': ReLU, 'leaky': Leaky, 'swish': Swish, 'mish': Mish}
+        activation = str(kwargs.get('activation', 'relu')).lower()
+        feature_block = kwargs.get('feature_block', 3)
+
+        feature_kernels = [2 * i + 1 for i in range(feature_block)]
+        self.features_conv = torch.nn.ModuleList([torch.nn.Conv2d(input_ch,
+                                                                  output_ch,
+                                                                  kernel,
+                                                                  1,
+                                                                  kernel // 2,
+                                                                  groups=input_ch)
+                                                  for kernel in feature_kernels])
+        self.feature_activation = torch.nn.ModuleList([activations[activation]()
+                                                       for _ in range(len(feature_kernels))])
+        # self.pixel_fusion = torch.nn.Conv2d(feature_block + 1, 1, 1, 1, 0)
+        self.pixel_fusion = torch.nn.Conv2d(feature_num * (feature_block + 1), output_ch, 1, 1, 0)
+        self.output_conv = torch.nn.Conv2d(output_ch, output_ch, 3, 1, 1)
+        self.output_activation = activations[activation]()
+
+    def forward(self, x):
+
+        b, ch, h, w = x.size()
+        x_in = x
+        all_x = [x_in]
+        for i, (activation, layer) in enumerate(zip(self.feature_activation, self.features_conv)):
+            x = activation(layer(x_in))
+            all_x.append(x)
+        all_x = torch.cat(all_x, dim=1)
+        # all_x = all_x.reshape(b, -1, ch, h * w)
         all_x = self.pixel_fusion(all_x)
         all_x = all_x.reshape(b, ch, h, w)
         return_x = self.output_activation(self.output_conv(all_x))
