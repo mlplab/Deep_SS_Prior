@@ -656,7 +656,27 @@ class Mix_SS_Layer(torch.nn.Module):
 # ########################## Feature Fusion Layer ##########################
 
 
-class FeatureFusion(torch.nn.Module):
+
+class PixelFusionLayer(torch.nn.Module):
+
+    def __init__(self, input_ch, output_ch, *args, feature_num=64, **kwargs):
+        super().__init__()
+        activations = {'none': torch.nn.Identity, 'relu': ReLU, 'leaky': Leaky, 'swish': Swish, 'mish': Mish}
+        activation = str(kwargs.get('activation', 'relu')).lower()
+        self.expansion_conv = torch.nn.Conv2d(input_ch, feature_num, 1, 1, 0)
+        self.expansion_activation = activations[activation]()
+        self.restore_conv = torch.nn.Conv2d(feature_num, output_ch, 1, 1, 0)
+        self.restore_activation = activations[activation]()
+
+    def forward(self, x):
+
+        x = self.expansion_activation(self.expansion_conv(x))
+        x = self.restore_activation(self.restore_conv(x))
+
+        return x
+
+
+class FeatureFusionBlock(torch.nn.Module):
 
     def __init__(self, input_ch: int, output_ch: int, *args, feature_num: int=64,
                  mode: str='pixel', **kwargs):
@@ -678,7 +698,9 @@ class FeatureFusion(torch.nn.Module):
         self.feature_activation = torch.nn.ModuleList([activations[activation]()
                                                        for _ in range(len(feature_kernels))])
         if mode == 'pixel':
-            self.pixel_fusion = torch.nn.Conv2d(feature_block + 1, 1, 1, 1, 0)
+            compress_feature = torch.nn.Conv2d(feature_block + 1, 1, 1, 1, 0)
+            pixel_fusion = PixelFusionLayer(feature_bock + 1, 1, activation=activation)
+            self.pixel_fusion = torch.nn.Sequential(compress_feature, pixel_fusion)
         elif mode == 'ch':
             self.pixel_fusion = torch.nn.Conv2d(feature_num * (feature_block + 1), output_ch, 1, 1, 0)
         self.output_conv = torch.nn.Conv2d(output_ch, output_ch, 3, 1, 1)
