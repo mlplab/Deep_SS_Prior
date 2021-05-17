@@ -3,6 +3,7 @@
 
 import os
 import sys
+import shutil
 import argparse
 import datetime
 import torch
@@ -67,7 +68,7 @@ os.makedirs(all_ckpt_path, exist_ok=True)
 
 
 model_obj = {'HSCNN': HSCNN, 'HyperReconNet': HyperReconNet, 'DeepSSPrior': DeepSSPrior, 'FusionReconst': FusionReconstHSI}
-activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu', 'FusionReconst': 'none'}
+activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu', 'FusionReconst': 'relu'}
 
 
 train_transform = (RandomHorizontalFlip(), torchvision.transforms.ToTensor())
@@ -83,9 +84,7 @@ if model_name not in model_obj.keys():
     sys.exit(0)
 
 
-
-
-activation=activations[model_name]
+activation = activations[model_name]
 model = model_obj[model_name](input_ch, 31, block_num=block_num,
                               activation=activation, feature_block=feature_block)
 
@@ -97,6 +96,11 @@ else:
 finish_ckpt = os.path.join(all_ckpt_path, f'{save_model_name}_{dt_now}.tar')
 if os.path.exists(os.path.join(finish_ckpt)):
     print('already trained')
+    sys.exit(0)
+if os.path.exists(f'../SCI_ckpt/{data_name}_SOTA/{model_name}_{block_num:02d}.tar'):
+    shutil.copy(f'../SCI_ckpt/{data_name}_SOTA/{model_name}_{block_num:02d}.tar',
+        f'../SCI_ckpt/{data_name}_{dt_now}/all_trained/{model_name}_{block_num:02d}.tar')
+    print('copy model')
     sys.exit(0)
 
 
@@ -117,6 +121,12 @@ trainer = Trainer(model, criterion, optim, scheduler=scheduler,
                   callbacks=[ckpt_cb],
                   output_progress_path=os.path.join(ckpt_path, save_model_name))
 train_loss, val_loss = trainer.train(epochs, train_dataloader, test_dataloader)
+if model_name in ['HSCNN', 'DeepSSPrior', 'HyperReconNet']:
+    torch.save({'model_state_dict': model.state_dict(),
+                'optim': optim.state_dict(),
+                'train_loss': train_loss, 'val_loss': val_loss,
+                'epoch': epochs},
+               f'../SCI_ckpt/{data_name}_SOTA/{model_Name}_{block_num:02d}.tar')
 torch.save({'model_state_dict': model.state_dict(),
             'optim': optim.state_dict(),
             'train_loss': train_loss, 'val_loss': val_loss,
