@@ -68,7 +68,7 @@ os.makedirs(all_ckpt_path, exist_ok=True)
 
 
 model_obj = {'HSCNN': HSCNN, 'HyperReconNet': HyperReconNet, 'DeepSSPrior': DeepSSPrior, 'FusionReconst': FusionReconstHSI}
-activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu', 'FusionReconst': 'relu'}
+activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu', 'FusionReconst': 'none'}
 
 
 train_transform = (RandomHorizontalFlip(), torchvision.transforms.ToTensor())
