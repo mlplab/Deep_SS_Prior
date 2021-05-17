@@ -1,8 +1,8 @@
 # coding: UTF-8
 
 
-from layers import ReLU, Leaky, Swish, Mish
-from layers import FeatureFusionBlock
+from .layers import ReLU, Leaky, Swish, Mish
+from .layers import FeatureFusionBlock
 import torch
 from torchsummary import summary
 
@@ -38,6 +38,6 @@ class FusionReconstHSI(torch.nn.Module):
 
 if __name__ == '__main__':
 
-    mode = 'ch'
-    model = FusionReconstHSI(1, 31, feature_num=64, feature_block=4, mode=mode).to('cuda')
+    mode = 'pixel'
+    model = FusionReconstHSI(1, 31, feature_num=64, feature_block=1, mode=mode).to('cuda')
     summary(model, (1, 48, 48))
