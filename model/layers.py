@@ -698,10 +698,8 @@ class FeatureFusionBlock(torch.nn.Module):
         self.feature_activation = torch.nn.ModuleList([activations[activation]()
                                                        for _ in range(len(feature_kernels))])
         if mode == 'pixel':
-            compress_feature = torch.nn.Conv2d(feature_block + 1, 1, 1, 1, 0)
-            pixel_fusion = PixelFusionLayer(1, 1, feature_num=feature_block * feature_block, 
-                                            activation=activation)
-            self.pixel_fusion = torch.nn.Sequential(compress_feature, pixel_fusion)
+            self.pixel_fusion = torch.nn.Conv2d(feature_block + 1, 1, 1, 1, 0)
+
         elif mode == 'ch':
             self.pixel_fusion = torch.nn.Conv2d(feature_num * (feature_block + 1), output_ch, 1, 1, 0)
         self.output_conv = torch.nn.Conv2d(output_ch, output_ch, 3, 1, 1)
@@ -719,6 +717,6 @@ class FeatureFusionBlock(torch.nn.Module):
         if self.mode == 'pixel':
             all_x = all_x.reshape(b, -1, ch, h * w)
         all_x = self.pixel_fusion(all_x)
-        all_x = all_x.reshape(b, ch, h, w)
-        return_x = self.output_activation(self.output_conv(all_x))
+        return_x = all_x.reshape(b, ch, h, w)
+        # return_x = self.output_activation(self.output_conv(all_x))
         return return_x
