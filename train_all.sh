@@ -6,7 +6,7 @@ CMDNAME=`basename $0`
 
 batch_size=64
 epoch=150
-datasets=("CAVE Harvard")
+datasets=("CAVE Harvard ICVL")
 concat="False"
 model_name=("Mix" "Vanilla")
 block_num=9
