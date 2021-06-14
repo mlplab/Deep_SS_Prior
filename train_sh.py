@@ -69,10 +69,7 @@ os.makedirs(all_trained_ckpt_path, exist_ok=True)
 model_obj = {'Mix': HyperMixNet, 'Vanilla': VanillaNet}
 activations = {'Mix': 'relu', 'Vanilla': 'relu'}
 activation = activations[model_name]
-if model_name == 'Mix':
-    save_model_name = f'{model_name}_{activation}_{block_num:02d}_{chunck:02d}_{loss_mode}'
-else:
-    save_model_name = f'{model_name}_{activation}_{block_num:02d}_{loss_mode}'
+save_model_name = f'{model_name}_{activation}_{block_num:02d}_{chunck:02d}_{loss_mode}'
 if os.path.exists(os.path.join(all_trained_ckpt_path, f'{save_model_name}.tar')):
     print('already trained')
     exit(0)
