@@ -33,8 +33,9 @@ class VanillaNet(torch.nn.Module):
         super().__init__()
         activation = kwargs.get('activation', 'relu').lower()
         self.input_conv = torch.nn.Conv2d(input_ch, feature_num, 3, 1, 1)
-        self.vanilla_conv = torch.nn.ModuleList([GroupConv(feature_num, feature_num,  
-                                                           chuncks, activation=activation) 
+        self.vanilla_conv = torch.nn.ModuleList([GroupConv(feature_num, feature_num,
+                                                           chuncks, kernel_size=3, 
+                                                           activation=activation) 
                                              for _ in range(block_num)])
         self.output_conv = torch.nn.Conv2d(feature_num, output_ch, 1, 1, 0)
 
