@@ -22,8 +22,7 @@ parser.add_argument('--dataset', '-d', default='Harvard', type=str, help='Select
 parser.add_argument('--concat', '-c', default='False', type=str, help='Concat mask by input')
 parser.add_argument('--model_name', '-m', default='HSCNN', type=str, help='Model Name')
 parser.add_argument('--block_num', '-b', default=9, type=int, help='Model Block Number')
-parser.add_argument('--ratio', '-r', default=2, type=int, help='Ghost ratio')
-parser.add_argument('--mode', '-md', default='None', type=str, help='Mix mode')
+parser.add_argument('--chunck', '-ch', default=2, type=int, help='Mix chuncks')
 parser.add_argument('--start_time', '-st', default='0000', type=str, help='start training time')
 parser.add_argument('--loss', '-l', default='mse', type=str, help='Loss Mode')
 args = parser.parse_args()
@@ -47,8 +46,7 @@ activations = {'HSCNN': 'leaky', 'HyperReconNet': 'relu', 'DeepSSPrior': 'relu',
 
 model_name = args.model_name
 block_num = args.block_num
-ratio = args.ratio
-mode = args.mode
+chunck = args.chunck
 
 
 img_path = f'../SCI_dataset/My_{data_name}'
@@ -58,10 +56,10 @@ mask_path = os.path.join(img_path, 'eval_mask_data')
 
 activation = activations[model_name]
 ckpt_dir = f'../SCI_ckpt/{data_name}_{dt_now}/all_trained'
-if model_name == 'Ghost':
-    ckpt_name = f'{model_name}_{activation}_{block_num:02d}_{ratio:02}_{mode}_{loss_mode}'
-else:
-    ckpt_name = f'{model_name}_{activation}_{block_num:02d}'
+model_obj = {'Mix': HyperMixNet, 'Vanilla': VanillaNet}
+activations = {'Mix': 'relu', 'Vanilla': 'relu'}
+activation = activations[model_name]
+ckpt_name = f'{model_name}_{activation}_{block_num:02d}_{chunck:02d}_{loss_mode}'
 ckpt_path = os.path.join(ckpt_dir, ckpt_name + '.tar')
 
 
@@ -82,9 +80,8 @@ test_dataset = PatchEvalDataset(test_path, mask_path, transform=None, concat=con
 if model_name not in model_obj.keys():
     print('Enter Model Name')
     sys.exit(0)
-model = model_obj[model_name](input_ch, 31, block_num=block_num, feature_num=31,
-                              activation=activations[model_name], 
-                              ratio=ratio, mode=mode)
+model = model_obj[model_name](input_ch, 31, chunck, block_num=block_num, feature_num=31,
+                              activation=activations[model_name])
 
 
 ckpt = torch.load(ckpt_path, map_location=torch.device(device))
